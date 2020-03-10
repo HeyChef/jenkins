@@ -6,7 +6,7 @@ def nexusId = 'localnexus'
 def nexusUrl = 'http://172.18.0.4:8081'
 
 // Repo Id (provient du settings.xml nexus pour récupérer user/password)
-def mavenRepoId = 'localnexus'
+def mavenRepoId = 'nexusLocal'
 
 /* *** Repositories Nexus *** */
 def nexusRepoSnapshot = "maven-snapshots"
@@ -30,7 +30,7 @@ pipeline {
    stages {
       stage('Checkout') {
          steps {
-            checkout([$class: 'GitSCM', branches: [[name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/HeyChef/jenkins']]])
+            checkout([$class: 'GitSCM', branches: [[name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/HeyChef/jenkins.git']]])
          }
       }
       stage('Get info from POM') {
@@ -69,27 +69,10 @@ pipeline {
                 sh 'mvn spotbugs:spotbugs'
             }
       }
-
-      /*
-      Ce stage ne se lance que si isSnapshot est vrai
-      Comme on pousse un Snapshot, on utilise le plugin deploy:deploy-file, cela permet de ne pas mettre les paramètres du Repo dans le pom.xml
-      */
-      stage('Push SNAPSHOT to Nexus') {
-          when { expression { isSnapshot } }
-          steps {
-              sh "mvn deploy:deploy-file -e -DgroupId=${groupId} -Dversion=${version} -Dpackaging=${packaging} -Durl=${nexusUrl}/repository/${nexusRepoSnapshot}/ -Dfile=${filepath} -DartifactId=${artifactId} -DrepositoryId=${mavenRepoId}"
-
-          }
-      }
-     
-     /*
-     Ce stage ne se lance que si isSnapshot est faux
-     On pousse la release via le plugin Nexus
-     */
       stage('Push RELEASE to Nexus') {
           when { expression { !isSnapshot } }
           steps {
-            nexusPublisher nexusInstanceId: 'localnexus', nexusRepositoryId: "${nexusRepoRelease}", packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: "${filepath}"]], mavenCoordinate: [artifactId: "${artifactId}", groupId: "${groupId}", packaging: "${packaging}", version: "${version}"]]]
+            nexusPublisher nexusInstanceId: 'nexus_localhost', nexusRepositoryId: "${nexusRepoRelease}", packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: "${filepath}"]], mavenCoordinate: [artifactId: "${artifactId}", groupId: "${groupId}", packaging: "${packaging}", version: "${version}"]]]
           }
       }
    }
