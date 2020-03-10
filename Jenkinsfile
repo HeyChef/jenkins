@@ -30,7 +30,7 @@ pipeline {
    stages {
       stage('Checkout') {
          steps {
-            checkout([$class: 'GitSCM', branches: [[name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/HeyChef/jenkins.git']]])
+            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/HeyChef/jenkins.git']]])
          }
       }
       stage('Get info from POM') {
